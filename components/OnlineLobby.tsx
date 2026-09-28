@@ -68,8 +68,15 @@ export default function OnlineLobby({ isConfigured, rooms, onCreate, onJoin }: O
             >
               <span>
                 <span className="block font-bold text-white">{room.roomName}</span>
+                {room.playerCount >= 2 && (
+                  <span className="block text-xs font-semibold text-amber-400 mt-0.5">경기중입니다. (관전 가능)</span>
+                )}
               </span>
-              <span className="px-3 py-1.5 rounded-md bg-amber-500/20 text-amber-300 text-sm font-bold">입장하기</span>
+              <span className={`px-3 py-1.5 rounded-md text-sm font-bold ${
+                room.playerCount >= 2 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300'
+              }`}>
+                {room.playerCount >= 2 ? '관전하기' : '입장하기'}
+              </span>
             </button>
           ))
         )}

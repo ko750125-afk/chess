@@ -15,6 +15,7 @@ export type OnlineRole = Color | 'spectator';
 export interface LobbyRoom {
   roomId: string;
   roomName: string;
+  playerCount: number;
 }
 
 export interface OnlineSnapshot {
@@ -68,9 +69,9 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const trackLobby = useCallback(() => {
     const room = hostingRef.current;
     lobbyChannelRef.current
-      ?.track(room ? { user_id: myUserId, isHosting: true, ...room } : { user_id: myUserId, isHosting: false })
+      ?.track(room ? { user_id: myUserId, isHosting: true, ...room, playerCount } : { user_id: myUserId, isHosting: false })
       .catch(console.error);
-  }, [myUserId]);
+  }, [myUserId, playerCount]);
 
   // 온라인 모드를 "켜져 있다가" 벗어날 때만 방에서 나간 것으로 정리
   // (처음 페이지를 열 때 실행되면 초대 링크의 ?room= 을 읽기도 전에 지워버리므로)
@@ -93,7 +94,9 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
         const rooms: LobbyRoom[] = [];
         Object.values(channel.presenceState()).forEach((presences) => {
           (presences as unknown as (LobbyRoom & { isHosting?: boolean })[]).forEach((p) => {
-            if (p.isHosting && p.roomId && p.roomName) rooms.push({ roomId: p.roomId, roomName: p.roomName });
+            if (p.isHosting && p.roomId && p.roomName) {
+              rooms.push({ roomId: p.roomId, roomName: p.roomName, playerCount: p.playerCount || 1 });
+            }
           });
         });
         setLobbyRooms(rooms);
@@ -122,6 +125,11 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
           (a, b) => a.joined_at - b.joined_at
         );
         setPlayerCount(users.length);
+
+        // 방 인원 수가 바뀌었으므로 로비 목록 업데이트 (내가 방장일 때만)
+        if (hostingRef.current?.roomId === roomId) {
+          setTimeout(() => trackLobby(), 0);
+        }
 
         // 역할 결정: 새로고침 전 역할 > 방장(백) > 접속 순서(1번째 백, 2번째 흑, 이후 관전)
         let role = sessionStorage.getItem(roleStorageKey(roomId)) as OnlineRole | null;
