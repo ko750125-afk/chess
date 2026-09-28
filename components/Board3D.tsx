@@ -72,8 +72,10 @@ function CameraOrientation({ flipped }: { flipped: boolean }) {
     camera.lookAt(0, 0, 0);
     
     if (camera instanceof THREE.PerspectiveCamera) {
-      // 모바일(캔버스 너비 640 미만)에서는 테두리 프레임을 밖으로 밀어내어 8x8 체스판만 화면에 꽉 차게 줌인 (1.18배)
-      camera.zoom = size.width < 640 ? 1.18 : 1;
+      // 모바일(화면 너비 640 미만)에서는 테두리 프레임을 밖으로 밀어내어 8x8 체스판만 화면에 꽉 차게 줌인 (1.18배)
+      // 주의: 캔버스 크기(size.width)가 아니라 실제 브라우저 너비 기준이어야 데스크톱에서 오작동하지 않음
+      const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
+      camera.zoom = isMobile ? 1.18 : 1;
       camera.updateProjectionMatrix();
     }
     

@@ -12,7 +12,7 @@ export default function SceneLights({ shadowExtent, shadowMapSize }: SceneLights
       <ambientLight intensity={0.55} />
       <hemisphereLight args={['#fff6e5', '#3e2723', 0.35]} />
       <directionalLight
-        position={[3, 10, 5]}
+        position={[0, 15, 6]}
         intensity={1.4}
         castShadow
         shadow-mapSize-width={shadowMapSize}
