@@ -127,12 +127,7 @@ function Scene({ pieces, selectedId, legalMoves, lastMove, checkedColor, threatP
 
       {squares}
 
-      {lastMove && (
-        <>
-          <SquareOverlay x={lastMove.from.x} y={lastMove.from.y} color="#facc15" opacity={0.3} height={0.004} />
-          <SquareOverlay x={lastMove.to.x} y={lastMove.to.y} color="#facc15" opacity={0.3} height={0.004} />
-        </>
-      )}
+      {/* 마지막 이동 표시 제거됨 */}
       {selected && <SquareOverlay x={selected.x} y={selected.y} color="#fbbf24" opacity={0.45} height={0.006} />}
       {checkedKing && <PulsingOverlay x={checkedKing.x} y={checkedKing.y} color="#dc2626" />}
       {threatPieces.map((p) => (
