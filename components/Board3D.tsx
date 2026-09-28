@@ -66,12 +66,19 @@ function MoveMarker({ x, y, isCapture }: { x: number; y: number; isCapture: bool
 
 /** 카메라의 화면 위쪽 방향을 바꿔 판을 180° 돌린다 (백 시점: -Z가 위, 흑 시점: +Z가 위) */
 function CameraOrientation({ flipped }: { flipped: boolean }) {
-  const { camera, invalidate } = useThree();
+  const { camera, invalidate, size } = useThree();
   useEffect(() => {
     camera.up.set(0, 0, flipped ? 1 : -1);
     camera.lookAt(0, 0, 0);
+    
+    if (camera instanceof THREE.PerspectiveCamera) {
+      // 모바일(캔버스 너비 640 미만)에서는 좌표가 숨겨지므로, 빈 공간만큼(약 5%) 줌인하여 화면을 꽉 채움
+      camera.zoom = size.width < 640 ? 1.05 : 1;
+      camera.updateProjectionMatrix();
+    }
+    
     invalidate();
-  }, [camera, flipped, invalidate]);
+  }, [camera, flipped, invalidate, size.width]);
   return null;
 }
 
@@ -159,7 +166,7 @@ export default function Board3D(props: Board3DProps) {
   // 판이 돌아가면 좌표 라벨의 배치 순서도 반대로
   const axis = (v: number) => (props.flipped ? -v : v);
   return (
-    <div className="relative w-[min(82vh,94vw)] max-w-[820px] aspect-square rounded-lg sm:rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] bg-[#2a1d17] cursor-pointer select-none">
+    <div className="relative w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)] bg-[#2a1d17] cursor-pointer select-none">
       <Canvas
         shadows
         dpr={[1, 2]}
@@ -172,7 +179,7 @@ export default function Board3D(props: Board3DProps) {
       {FILES.map((file, x) => (
         <span
           key={file}
-          className="absolute -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-[#f5deb3]/70 pointer-events-none"
+          className="absolute hidden sm:block -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-[#f5deb3]/70 pointer-events-none"
           style={{ left: toPct(axis(squareToWorld(x, 0)[0])), top: toPct(LABEL_OFFSET) }}
         >
           {file}
@@ -181,7 +188,7 @@ export default function Board3D(props: Board3DProps) {
       {Array.from({ length: 8 }, (_, y) => (
         <span
           key={y}
-          className="absolute -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-[#f5deb3]/70 pointer-events-none"
+          className="absolute hidden sm:block -translate-x-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-[#f5deb3]/70 pointer-events-none"
           style={{ left: toPct(-LABEL_OFFSET), top: toPct(axis(squareToWorld(0, y)[1])) }}
         >
           {y + 1}
