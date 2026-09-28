@@ -56,7 +56,6 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<OnlineRole | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
-  const playerCountRef = useRef(0);
 
   const handlersRef = useRef(handlers);
   useEffect(() => {
@@ -65,14 +64,23 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
 
   const lobbyChannelRef = useRef<RealtimeChannel | null>(null);
   const roomChannelRef = useRef<RealtimeChannel | null>(null);
-  const hostingRef = useRef<LobbyRoom | null>(null); // 내가 만든 방 (로비에 공개 중)
+  const hostingRef = useRef<{ roomId: string; roomName: string } | null>(null);
 
   const trackLobby = useCallback(() => {
     const room = hostingRef.current;
     lobbyChannelRef.current
-      ?.track(room ? { user_id: myUserId, isHosting: true, ...room, playerCount: playerCountRef.current } : { user_id: myUserId, isHosting: false })
+      ?.track(room ? { user_id: myUserId, isHosting: true, roomId: room.roomId, roomName: room.roomName } : { user_id: myUserId, isHosting: false })
       .catch(console.error);
   }, [myUserId]);
+
+  /** 로비 채널에 broadcast로 방의 인원수 변경을 즉시 알림 */
+  const broadcastRoomStatus = useCallback((targetRoomId: string, count: number) => {
+    lobbyChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'room_status',
+      payload: { roomId: targetRoomId, playerCount: count },
+    });
+  }, []);
 
   // 온라인 모드를 "켜져 있다가" 벗어날 때만 방에서 나간 것으로 정리
   // (처음 페이지를 열 때 실행되면 초대 링크의 ?room= 을 읽기도 전에 지워버리므로)
@@ -86,7 +94,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     wasEnabledRef.current = enabled;
   }, [enabled]);
 
-  // 로비 채널: 공개된 방 목록 공유
+  // 로비 채널: 공개된 방 목록 공유 + broadcast로 인원수 실시간 업데이트
   useEffect(() => {
     if (!enabled || !isSupabaseConfigured) return;
     const channel = supabase.channel(LOBBY_CHANNEL, { config: { presence: { key: myUserId } } });
@@ -96,11 +104,19 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
         Object.values(channel.presenceState()).forEach((presences) => {
           (presences as unknown as (LobbyRoom & { isHosting?: boolean })[]).forEach((p) => {
             if (p.isHosting && p.roomId && p.roomName) {
-              rooms.push({ roomId: p.roomId, roomName: p.roomName, playerCount: p.playerCount || 1 });
+              rooms.push({ roomId: p.roomId, roomName: p.roomName, playerCount: 1 });
             }
           });
         });
         setLobbyRooms(rooms);
+      })
+      // broadcast 이벤트로 인원수 실시간 수신: presence와 달리 즉시 반영됨
+      .on('broadcast', { event: 'room_status' }, ({ payload }) => {
+        setLobbyRooms((prev) =>
+          prev.map((r) =>
+            r.roomId === payload.roomId ? { ...r, playerCount: payload.playerCount } : r
+          )
+        );
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') trackLobby();
@@ -119,6 +135,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     if (!enabled || !roomId || !isSupabaseConfigured) return;
     const channel = supabase.channel(roomChannelName(roomId), { config: { presence: { key: myUserId } } });
     const requestState = () => channel.send({ type: 'broadcast', event: 'request_state' });
+    const currentRoomId = roomId; // 클로저 캡처
 
     channel
       .on('presence', { event: 'sync' }, () => {
@@ -126,29 +143,25 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
           (a, b) => a.joined_at - b.joined_at
         );
         setPlayerCount(users.length);
-        playerCountRef.current = users.length;
 
-        // 방 인원 수가 바뀌었으므로 로비 목록 업데이트 (내가 방장일 때만)
-        if (hostingRef.current?.roomId === roomId) {
-          setTimeout(() => trackLobby(), 0);
+        // 방장이 로비 채널에 인원수 변경을 broadcast로 즉시 알림
+        if (hostingRef.current?.roomId === currentRoomId) {
+          broadcastRoomStatus(currentRoomId, users.length);
         }
 
         // 역할 결정: 새로고침 전 역할 > 방장(백) > 접속 순서(1번째 백, 2번째 흑, 이후 관전)
-        let role = sessionStorage.getItem(roleStorageKey(roomId)) as OnlineRole | null;
-        if (!role && hostingRef.current?.roomId === roomId) role = 'white';
+        let role = sessionStorage.getItem(roleStorageKey(currentRoomId)) as OnlineRole | null;
+        if (!role && hostingRef.current?.roomId === currentRoomId) role = 'white';
         if (!role && users.length >= 2) {
           // 방장 정보와 내 정보가 모두 도착해야 순서를 판단할 수 있다
           const index = users.findIndex((u) => u.user_id === myUserId);
           if (index !== -1) role = index === 0 ? 'white' : index === 1 ? 'black' : 'spectator';
         }
         if (role) {
-          sessionStorage.setItem(roleStorageKey(roomId), role);
+          sessionStorage.setItem(roleStorageKey(currentRoomId), role);
           const decided = role;
           setMyRole((prev) => prev ?? decided);
         }
-
-        // 관전 기능을 위해 방 인원이 2명 이상이 되어도 로비 목록에서 방을 숨기지 않음
-        // (원래 있던 방 숨김 로직 제거)
       })
       .on('broadcast', { event: 'move' }, ({ payload }) => handlersRef.current.onRemoteMove(payload.move))
       .on('broadcast', { event: 'restart' }, () => handlersRef.current.onRemoteRestart())
@@ -177,7 +190,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
       setMyRole(null);
       setPlayerCount(0);
     };
-  }, [enabled, roomId, myUserId, trackLobby]);
+  }, [enabled, roomId, myUserId, trackLobby, broadcastRoomStatus]);
 
   const createRoom = (roomName: string) => {
     const newRoomId = generateRoomId();
