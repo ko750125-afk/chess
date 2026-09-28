@@ -56,6 +56,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<OnlineRole | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
+  const playerCountRef = useRef(0);
 
   const handlersRef = useRef(handlers);
   useEffect(() => {
@@ -69,9 +70,9 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const trackLobby = useCallback(() => {
     const room = hostingRef.current;
     lobbyChannelRef.current
-      ?.track(room ? { user_id: myUserId, isHosting: true, ...room, playerCount } : { user_id: myUserId, isHosting: false })
+      ?.track(room ? { user_id: myUserId, isHosting: true, ...room, playerCount: playerCountRef.current } : { user_id: myUserId, isHosting: false })
       .catch(console.error);
-  }, [myUserId, playerCount]);
+  }, [myUserId]);
 
   // 온라인 모드를 "켜져 있다가" 벗어날 때만 방에서 나간 것으로 정리
   // (처음 페이지를 열 때 실행되면 초대 링크의 ?room= 을 읽기도 전에 지워버리므로)
@@ -125,6 +126,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
           (a, b) => a.joined_at - b.joined_at
         );
         setPlayerCount(users.length);
+        playerCountRef.current = users.length;
 
         // 방 인원 수가 바뀌었으므로 로비 목록 업데이트 (내가 방장일 때만)
         if (hostingRef.current?.roomId === roomId) {
