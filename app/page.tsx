@@ -280,11 +280,6 @@ export default function Home() {
     resetBoard();
   };
 
-  const copyRoomLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert('방 주소가 복사되었습니다! 친구에게 전달하세요.');
-  };
-
   const capturedBy = (color: Color) => capturedPieces.filter((p) => p.color !== color);
 
   const isOnlineLobby = opponent === 'online' && !online.roomId;
@@ -377,13 +372,6 @@ export default function Home() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={copyRoomLink}
-                className="px-3 py-1 rounded-lg border border-white/10 text-neutral-200 hover:bg-white/10 cursor-pointer"
-              >
-                링크 복사
-              </button>
               <button
                 type="button"
                 onClick={handleLeaveRoom}
