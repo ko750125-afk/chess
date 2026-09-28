@@ -7,7 +7,7 @@ interface OnlineLobbyProps {
   isConfigured: boolean;
   rooms: LobbyRoom[];
   onCreate: (roomName: string) => void;
-  onJoin: (roomId: string) => void;
+  onJoin: (roomId: string, roomName: string) => void;
 }
 
 export default function OnlineLobby({ isConfigured, rooms, onCreate, onJoin }: OnlineLobbyProps) {
@@ -63,7 +63,7 @@ export default function OnlineLobby({ isConfigured, rooms, onCreate, onJoin }: O
             <button
               key={room.roomId}
               type="button"
-              onClick={() => onJoin(room.roomId)}
+              onClick={() => onJoin(room.roomId, room.roomName)}
               className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800/60 border border-white/5 hover:border-amber-400/40 text-left transition-colors cursor-pointer"
             >
               <span>

@@ -54,6 +54,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const [myUserId] = useState(generateUserId);
   const [lobbyRooms, setLobbyRooms] = useState<LobbyRoom[]>([]);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [roomName, setRoomName] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<OnlineRole | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
   const playerCountRef = useRef(0);
@@ -90,6 +91,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     if (wasEnabledRef.current && !enabled) {
       hostingRef.current = null;
       setRoomId(null);
+      setRoomName(null);
       if (new URLSearchParams(window.location.search).get('room')) setRoomQuery(null);
     }
     wasEnabledRef.current = enabled;
@@ -202,11 +204,13 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     trackLobby();
     setRoomQuery(newRoomId);
     setRoomId(newRoomId);
+    setRoomName(roomName);
   };
 
-  const joinRoom = (targetRoomId: string) => {
+  const joinRoom = (targetRoomId: string, targetRoomName?: string) => {
     setRoomQuery(targetRoomId);
     setRoomId(targetRoomId);
+    if (targetRoomName) setRoomName(targetRoomName);
   };
 
   const leaveRoom = () => {
@@ -215,6 +219,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     trackLobby();
     setRoomQuery(null);
     setRoomId(null);
+    setRoomName(null);
   };
 
   const sendMove = (move: Move) => {
@@ -229,6 +234,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
     isConfigured: isSupabaseConfigured,
     lobbyRooms,
     roomId,
+    roomName,
     myRole,
     playerCount,
     createRoom,
