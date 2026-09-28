@@ -25,9 +25,12 @@ export interface PieceBand {
 const bandMaterial = (color: string) => new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
 const bandGeometry = (radius: number, height: number) => new THREE.CylinderGeometry(radius, radius, height, 32);
 export const PIECE_BANDS: Partial<Record<PieceType, PieceBand>> = {
-  king: { geometry: bandGeometry(0.215, 0.04), material: bandMaterial('#38bdf8'), y: 0.485 }, // 목 띠 (반지름 0.21, 높이 0.47~0.50)
-  queen: { geometry: bandGeometry(0.205, 0.04), material: bandMaterial('#ef4444'), y: 0.465 }, // 목 띠 (반지름 0.20, 높이 0.45~0.48)
-  bishop: { geometry: bandGeometry(0.285, 0.05), material: bandMaterial('#22c55e'), y: 0.085 }, // 받침 띠 (반지름 0.27, 높이 0.07~0.10)
+  king: { geometry: bandGeometry(0.215, 0.04), material: bandMaterial('#ef4444'), y: 0.485 }, // 목 띠 (빨강)
+  queen: { geometry: bandGeometry(0.205, 0.04), material: bandMaterial('#38bdf8'), y: 0.465 }, // 목 띠 (하늘색)
+  bishop: { geometry: bandGeometry(0.285, 0.05), material: bandMaterial('#38bdf8'), y: 0.085 }, // 받침 띠 (하늘색)
+  knight: { geometry: bandGeometry(0.285, 0.05), material: bandMaterial('#38bdf8'), y: 0.085 }, // 받침 띠 (하늘색)
+  rook: { geometry: bandGeometry(0.285, 0.05), material: bandMaterial('#38bdf8'), y: 0.085 }, // 받침 띠 (하늘색)
+  pawn: { geometry: bandGeometry(0.285, 0.05), material: bandMaterial('#38bdf8'), y: 0.085 }, // 받침 띠 (하늘색)
 };
 
 /** 논리 좌표(0~7) → 3D 월드 좌표. 1랭크가 화면 아래(+Z), 8랭크가 화면 위(-Z) */
