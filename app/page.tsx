@@ -313,8 +313,8 @@ export default function Home() {
   const myStyle = getCardStyle(myColor);
 
   return (
-    <main className="w-full h-[100dvh] bg-slate-800 flex flex-col items-center justify-center p-1 sm:p-4 select-none overflow-hidden">
-      <div className="w-full max-w-[min(calc(100dvh-260px),98vw)] sm:max-w-[min(82vh,94vw)] lg:max-w-[820px] flex flex-col items-center gap-1.5 sm:gap-2">
+    <main className="w-full min-h-screen bg-slate-800 flex flex-col items-center justify-center p-1 sm:p-4 select-none">
+      <div className="w-full max-w-[min(calc(100dvh-260px),98vw)] sm:max-w-[min(82vh,94vw)] lg:max-w-[820px] flex flex-col items-center gap-1.5 sm:gap-2 my-auto">
         {/* 게임 타이틀 및 로고 */}
         <div className="w-full flex items-center justify-center gap-3 py-2">
           <img src="/chess_icon_wood.jpg" alt="Chess Logo" className="w-12 h-12 rounded-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] border border-[#d4c4a8]/50 object-cover" />
