@@ -137,11 +137,8 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
           setMyRole((prev) => prev ?? decided);
         }
 
-        // 두 명이 모이면 로비 목록에서 내 방을 숨김
-        if (users.length >= 2 && hostingRef.current?.roomId === roomId) {
-          hostingRef.current = null;
-          trackLobby();
-        }
+        // 관전 기능을 위해 방 인원이 2명 이상이 되어도 로비 목록에서 방을 숨기지 않음
+        // (원래 있던 방 숨김 로직 제거)
       })
       .on('broadcast', { event: 'move' }, ({ payload }) => handlersRef.current.onRemoteMove(payload.move))
       .on('broadcast', { event: 'restart' }, () => handlersRef.current.onRemoteRestart())

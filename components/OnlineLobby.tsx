@@ -68,7 +68,6 @@ export default function OnlineLobby({ isConfigured, rooms, onCreate, onJoin }: O
             >
               <span>
                 <span className="block font-bold text-white">{room.roomName}</span>
-                <span className="block text-xs text-neutral-400">방 코드: {room.roomId}</span>
               </span>
               <span className="px-3 py-1.5 rounded-md bg-amber-500/20 text-amber-300 text-sm font-bold">입장하기</span>
             </button>

@@ -367,11 +367,7 @@ export default function Home() {
         {opponent === 'online' && online.roomId && (
           <div className="w-full flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-blue-900/30 rounded-xl border border-blue-400/20 text-xs sm:text-sm">
             <div className="flex items-center gap-2 text-neutral-200">
-              <span>
-                방 코드 <b className="text-white">{online.roomId}</b>
-              </span>
-              <span className="text-neutral-500">·</span>
-              <span>
+              <span className="font-bold">
                 {online.myRole === 'white' ? '나: 백' : online.myRole === 'black' ? '나: 흑' : online.myRole === 'spectator' ? '관전 중' : '접속 중…'}
               </span>
               {online.playerCount < 2 && (
