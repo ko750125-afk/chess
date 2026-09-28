@@ -56,6 +56,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<OnlineRole | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
+  const playerCountRef = useRef(0);
 
   const handlersRef = useRef(handlers);
   useEffect(() => {
@@ -69,7 +70,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
   const trackLobby = useCallback(() => {
     const room = hostingRef.current;
     lobbyChannelRef.current
-      ?.track(room ? { user_id: myUserId, isHosting: true, roomId: room.roomId, roomName: room.roomName } : { user_id: myUserId, isHosting: false })
+      ?.track(room ? { user_id: myUserId, isHosting: true, roomId: room.roomId, roomName: room.roomName, playerCount: playerCountRef.current || 1 } : { user_id: myUserId, isHosting: false })
       .catch(console.error);
   }, [myUserId]);
 
@@ -104,7 +105,7 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
         Object.values(channel.presenceState()).forEach((presences) => {
           (presences as unknown as (LobbyRoom & { isHosting?: boolean })[]).forEach((p) => {
             if (p.isHosting && p.roomId && p.roomName) {
-              rooms.push({ roomId: p.roomId, roomName: p.roomName, playerCount: 1 });
+              rooms.push({ roomId: p.roomId, roomName: p.roomName, playerCount: p.playerCount || 1 });
             }
           });
         });
@@ -143,10 +144,13 @@ export function useOnlineGame(enabled: boolean, handlers: OnlineHandlers) {
           (a, b) => a.joined_at - b.joined_at
         );
         setPlayerCount(users.length);
+        playerCountRef.current = users.length;
 
         // 방장이 로비 채널에 인원수 변경을 broadcast로 즉시 알림
         if (hostingRef.current?.roomId === currentRoomId) {
           broadcastRoomStatus(currentRoomId, users.length);
+          // 뒤늦게 들어오는 사람을 위해 presence 상태도 업데이트
+          setTimeout(() => trackLobby(), 0);
         }
 
         // 역할 결정: 새로고침 전 역할 > 방장(백) > 접속 순서(1번째 백, 2번째 흑, 이후 관전)
